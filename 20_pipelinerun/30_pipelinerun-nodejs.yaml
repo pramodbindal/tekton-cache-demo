@@ -1,0 +1,22 @@
+---
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: demo-pipeline-tekton-caches-nodejs-
+spec:
+  pipelineRef:
+    name: pipeline-nodejs
+  params:
+    - name: repo_url
+      value: https://github.com/acemilyalcin/sample-node-project.git
+    - name: revision
+      value: master
+    - name: registry
+      value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)
+    - name: cachePatterns
+      value: [ "**/workspace/source/package.json" ]
+    - name: image
+      value: quay.io/openshift-pipeline/ci:latest
+  workspaces:
+    - name: source
+      emptyDir: {}

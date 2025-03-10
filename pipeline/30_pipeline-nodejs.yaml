@@ -1,0 +1,110 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: pipeline-nodejs
+spec:
+  params:
+    - name: repo_url
+      type: string
+    - name: revision
+      type: string
+    - name: registry
+      type: string
+    - name: buildCommand
+      type: string
+      default: npm install
+    - name: cachePatterns
+      type: array
+      default: ["**package*.json"]
+    - name: image
+      type: string
+      default: registry.access.redhat.com/ubi9/nodejs-18:latest
+    - name: force-cache-upload
+      type: string
+      default: "false"
+  workspaces:
+    - name: source
+  tasks:
+    - displayName: Build NodeJs application
+      name: build-task
+      workspaces:
+        - name: source
+          workspace: source
+      taskSpec:
+        workspaces:
+          - name: source
+        params:
+          - name: buildCommand
+            default: $(params.buildCommand)
+          - name: cachePatterns
+            default: $(params.cachePatterns)
+          - name: image
+            default: $(params.image)
+
+#        stepTemplate:
+
+        steps:
+          - name: create-repo
+            image: $(params.image)
+            script: |
+              mkdir -p $(workspaces.source.path)/repo
+              chmod 777 $(workspaces.source.path)/repo
+          - name: fetch-repo
+            ref:
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/tektoncd/catalog/main/stepaction/git-clone/0.1/git-clone.yaml
+            params:
+              - name: output-path
+                value: $(workspaces.source.path)
+              - name: url
+                value: $(params.repo_url)
+              - name: revision
+                value: $(params.revision)
+          - name: cache-fetch
+            ref:
+              name: cache-fetch
+#              resolver: http
+#              params:
+#                - name: url
+#                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-fetch.yaml
+            params:
+              - name: patterns
+                value: $(params.cachePatterns)
+              - name: source
+                value: "oci://$(params.registry)/cache-nodejs:{{hash}}"
+              - name: cachePath
+                value: $(workspaces.source.path)/node_modules
+              - name: workingdir
+                value: $(workspaces.source.path)/
+          - name: run-build
+            image: node
+            workingDir: $(workspaces.source.path)
+            env:
+            script: |
+              set -x
+              whoami
+              ls -lart /workspace/source
+
+              $(params.buildCommand)
+              ls -al .
+              echo "Cache size is $(du -sh $(workspaces.source.path)/node_modules)"
+          - name: cache-upload
+            ref:
+              name: cache-upload
+#              params:
+#                - name: url
+#                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-upload.yaml
+            params:
+              - name: patterns
+                value: $(params.cachePatterns)
+              - name: target
+                value: "oci://$(params.registry)/cache-nodejs:{{hash}}"
+              - name: cachePath
+                value: $(workspaces.source.path)/node_modules
+              - name: workingdir
+                value: $(workspaces.source.path)/
+              - name: force-cache-upload
+                value: $(params.force-cache-upload)
