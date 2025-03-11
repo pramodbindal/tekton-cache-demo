@@ -65,11 +65,11 @@ spec:
                 value: $(params.revision)
           - name: cache-fetch
             ref:
-              name: cache-fetch
-#              resolver: http
-#              params:
-#                - name: url
-#                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-fetch.yaml
+#              name: cache-fetch
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/openshift-pipelines/tekton-caches/main/tekton/cache-fetch.yaml
             params:
               - name: patterns
                 value: $(params.cachePatterns)
@@ -85,18 +85,15 @@ spec:
             env:
             script: |
               set -x
-              whoami
-              ls -lart /workspace/source
-
               $(params.buildCommand)
-              ls -al .
               echo "Cache size is $(du -sh $(workspaces.source.path)/node_modules)"
           - name: cache-upload
             ref:
-              name: cache-upload
-#              params:
-#                - name: url
-#                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-upload.yaml
+#              name: cache-upload
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/openshift-pipelines/tekton-caches/main/tekton/cache-upload.yaml
             params:
               - name: patterns
                 value: $(params.cachePatterns)
