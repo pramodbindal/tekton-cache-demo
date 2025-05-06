@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: pipelinerun-go-
+  generateName: pbindal-pipelinerun-go-
 spec:
   pipelineRef:
     name: pipeline-go

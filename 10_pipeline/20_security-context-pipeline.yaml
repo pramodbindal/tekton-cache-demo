@@ -14,7 +14,7 @@ spec:
       type: string
     - name: cachePatterns
       type: array
-      default: ["**requirements.txt"]
+      default: [ "**requirements.txt" ]
     - name: image
       type: string
       default: python:latest
@@ -50,29 +50,29 @@ spec:
                 - MKNOD
                 - KILL
         steps:
-#          - name: create-repo
-#            image: $(params.image)
-#            script: |
-#              mkdir -p $(workspaces.source.path)/repo
-#              chmod 777 $(workspaces.source.path)/repo
-#          - name: clone-repo
-#            ref:
-#              resolver: http
-#              params:
-#                - name: url
-#                  value: https://raw.githubusercontent.com/tektoncd/catalog/main/stepaction/git-clone/0.1/git-clone.yaml
-#            params:
-#              - name: output-path
-#                value: $(workspaces.source.path)/repo
-#              - name: url
-#                value: $(params.repo_url)
-#              - name: revision
-#                value: $(params.revision)
-#          - name: set-python-venv
-#            image: $(params.image)
-#            script: |
-#              echo "Setting python venv to $(workspaces.source.path)/cache"
-#              python -m venv $(workspaces.source.path)/cache
+          - name: create-repo
+            image: $(params.image)
+            script: |
+              mkdir -p $(workspaces.source.path)/repo
+              chmod 777 $(workspaces.source.path)/repo
+          - name: clone-repo
+            ref:
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/tektoncd/catalog/main/stepaction/git-clone/0.1/git-clone.yaml
+            params:
+              - name: output-path
+                value: $(workspaces.source.path)/repo
+              - name: url
+                value: $(params.repo_url)
+              - name: revision
+                value: $(params.revision)
+          - name: set-python-venv
+            image: $(params.image)
+            script: |
+              echo "Setting python venv to $(workspaces.source.path)/cache"
+              python -m venv $(workspaces.source.path)/cache
 
           - name: cache-fetch
             ref:
@@ -89,31 +89,31 @@ spec:
                 value: $(workspaces.source.path)/cache/lib
               - name: workingdir
                 value: $(workspaces.source.path)/repo
-#          - name: run-build
-#            image: $(params.image)
-#            workingDir: $(workspaces.source.path)/repo
-#            env:
-#              - name: LOCAL_CACHE_REPO
-#                value: $(workspaces.source.path)/cache/lib
-#            script: |
-#              set -x
-#              source $(workspaces.source.path)/cache/bin/activate
-#              pip install -r requirements.txt
-#              echo "Cache size is $(du -sh $(workspaces.source.path)/cache)"
-#          - name: cache-upload
-#            ref:
-#              resolver: http
-#              params:
-#                - name: url
-#                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/main/tekton/cache-upload.yaml
-#            params:
-#              - name: patterns
-#                value: $(params.cachePatterns)
-#              - name: target
-#                value: oci://$(params.registry):{{hash}}
-#              - name: cachePath
-#                value: $(workspaces.source.path)/cache/lib
-#              - name: workingdir
-#                value: $(workspaces.source.path)/repo
-#              - name: force-cache-upload
-#                value: $(params.force-cache-upload)
+          - name: run-build
+            image: $(params.image)
+            workingDir: $(workspaces.source.path)/repo
+            env:
+              - name: LOCAL_CACHE_REPO
+                value: $(workspaces.source.path)/cache/lib
+            script: |
+              set -x
+              source $(workspaces.source.path)/cache/bin/activate
+              pip install -r requirements.txt
+              echo "Cache size is $(du -sh $(workspaces.source.path)/cache)"
+          - name: cache-upload
+            ref:
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/main/tekton/cache-upload.yaml
+            params:
+              - name: patterns
+                value: $(params.cachePatterns)
+              - name: target
+                value: oci://$(params.registry):{{hash}}
+              - name: cachePath
+                value: $(workspaces.source.path)/cache/lib
+              - name: workingdir
+                value: $(workspaces.source.path)/repo
+              - name: force-cache-upload
+                value: $(params.force-cache-upload)

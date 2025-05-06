@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: demo-pipeline-tekton-caches-nodejs-
+  generateName: pbindal-pipeline-tekton-caches-nodejs-
 spec:
   pipelineRef:
     name: pipeline-nodejs
@@ -16,7 +16,7 @@ spec:
     - name: cachePatterns
       value: [ "**/workspace/source/package.json" ]
     - name: image
-      value: quay.io/openshift-pipeline/ci:latest
+      value: registry.access.redhat.com/ubi9/nodejs-18:latest
   workspaces:
     - name: source
       emptyDir: {}

@@ -60,61 +60,61 @@ spec:
               mkdir -p $(workspaces.source.path)/repo
               chmod 777 $(workspaces.source.path)/repo
               ls -lart /workspace/source/repo
-#          - name: fetch-repo
-#            ref:
-#              resolver: http
-#              params:
-#                - name: url
-#                  value: https://raw.githubusercontent.com/tektoncd/catalog/main/stepaction/git-clone/0.1/git-clone.yaml
-#            params:
-#              - name: output-path
-#                value: $(workspaces.source.path)/repo
-#              - name: url
-#                value: $(params.repo_url)
-#              - name: revision
-#                value: $(params.revision)
-#          - name: cache-fetch
-#            ref:
-#              resolver: http
-#              params:
-#                - name: url
-#                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-fetch.yaml
-#            params:
-#              - name: patterns
-#                value: $(params.cachePatterns)
-#              - name: source
-#                value: oci://$(params.registry)/cache-go:{{hash}}
-#              - name: cachePath
-#                value: $(workspaces.source.path)/cache
-#              - name: workingdir
-#                value: $(workspaces.source.path)/repo
-#          - image: $(params.image)
-#            workingDir: $(workspaces.source.path)/repo
-#            name: run-go-build
-#            env:
-#              - name: GOCACHE
-#                value: $(workspaces.source.path)/cache/gocache
-#              - name: GOMODCACHE
-#                value: $(workspaces.source.path)/cache/gomodcache
-#            script: |
-#              set -x
-#              git config --global --add safe.directory $(workspaces.source.path)/repo
-#              $(params.buildCommand)
-#              echo "Cache size is $(du -sh $(workspaces.source.path)/cache)"
-#          - name: cache-upload
-#            ref:
-#              resolver: http
-#              params:
-#                - name: url
-#                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-upload.yaml
-#            params:
-#              - name: patterns
-#                value: $(params.cachePatterns)
-#              - name: target
-#                value: oci://$(params.registry)/cache-go:{{hash}}
-#              - name: cachePath
-#                value: $(workspaces.source.path)/cache
-#              - name: workingdir
-#                value: $(workspaces.source.path)/repo
-#              - name: force-cache-upload
-#                value: $(params.force-cache-upload)
+          - name: fetch-repo
+            ref:
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/tektoncd/catalog/main/stepaction/git-clone/0.1/git-clone.yaml
+            params:
+              - name: output-path
+                value: $(workspaces.source.path)/repo
+              - name: url
+                value: $(params.repo_url)
+              - name: revision
+                value: $(params.revision)
+          - name: cache-fetch
+            ref:
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-fetch.yaml
+            params:
+              - name: PATTERNS
+                value: $(params.cachePatterns)
+              - name: SOURCE
+                value: oci://$(params.registry)/cache-go:{{hash}}
+              - name: CACHE_PATH
+                value: $(workspaces.source.path)/cache
+              - name: WORKING_DIR
+                value: $(workspaces.source.path)/repo
+          - image: $(params.image)
+            workingDir: $(workspaces.source.path)/repo
+            name: run-go-build
+            env:
+              - name: GOCACHE
+                value: $(workspaces.source.path)/cache/gocache
+              - name: GOMODCACHE
+                value: $(workspaces.source.path)/cache/gomodcache
+            script: |
+              set -x
+              git config --global --add safe.directory $(workspaces.source.path)/repo
+              $(params.buildCommand)
+              echo "Cache size is $(du -sh $(workspaces.source.path)/cache)"
+          - name: cache-upload
+            ref:
+              resolver: http
+              params:
+                - name: url
+                  value: https://raw.githubusercontent.com/pramodbindal/tekton-caches/ford/tekton/cache-upload.yaml
+            params:
+              - name: PATTERNS
+                value: $(params.cachePatterns)
+              - name: TARGET
+                value: oci://$(params.registry)/cache-go:{{hash}}
+              - name: CACHE_PATH
+                value: $(workspaces.source.path)/cache
+              - name: workingdir
+                value: $(workspaces.source.path)/repo
+              - name: force-cache-upload
+                value: $(params.force-cache-upload)

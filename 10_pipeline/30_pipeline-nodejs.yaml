@@ -16,7 +16,7 @@ spec:
       default: npm install
     - name: cachePatterns
       type: array
-      default: ["**package*.json"]
+      default: [ "**package*.json" ]
     - name: image
       type: string
       default: registry.access.redhat.com/ubi9/nodejs-18:latest
@@ -41,67 +41,80 @@ spec:
             default: $(params.cachePatterns)
           - name: image
             default: $(params.image)
-
-#        stepTemplate:
-
+        stepTemplate:
+          securityContext:
+            privileged: false
+            #            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - SETFCAP
+              drop:
+                - MKNOD
+                - KILL
         steps:
-          - name: create-repo
-            image: $(params.image)
-            script: |
-              mkdir -p $(workspaces.source.path)/repo
-              chmod 777 $(workspaces.source.path)/repo
           - name: fetch-repo
             ref:
-              resolver: http
+              resolver: cluster
               params:
-                - name: url
-                  value: https://raw.githubusercontent.com/tektoncd/catalog/main/stepaction/git-clone/0.1/git-clone.yaml
+                - name: name
+                  value: git-clone               # Task name inside cluster
+                - name: namespace
+                  value: openshift-pipelines
+                - name: kind
+                  value: stepaction
             params:
-              - name: output-path
+              - name: OUTPUT_PATH
                 value: $(workspaces.source.path)
-              - name: url
+              - name: URL
                 value: $(params.repo_url)
-              - name: revision
+              - name: REVISION
                 value: $(params.revision)
           - name: cache-fetch
             ref:
-#              name: cache-fetch
-              resolver: http
+              resolver: cluster
               params:
-                - name: url
-                  value: https://raw.githubusercontent.com/openshift-pipelines/tekton-caches/main/tekton/cache-fetch.yaml
+                - name: name
+                  value: cache-fetch               # Task name inside cluster
+                - name: namespace
+                  value: openshift-pipelines
+                - name: kind
+                  value: stepaction
             params:
-              - name: patterns
+              - name: PATTERNS
                 value: $(params.cachePatterns)
-              - name: source
-                value: "oci://$(params.registry)/cache-nodejs:{{hash}}"
-              - name: cachePath
+              - name: SOURCE
+                value: "oci://$(params.registry)/cache-nodejs2:{{hash}}"
+              - name: CACHE_PATH
                 value: $(workspaces.source.path)/node_modules
-              - name: workingdir
+              - name: WORKING_DIR
                 value: $(workspaces.source.path)/
           - name: run-build
-            image: node
+            image: $(params.image)
             workingDir: $(workspaces.source.path)
             env:
             script: |
-              set -x
               $(params.buildCommand)
               echo "Cache size is $(du -sh $(workspaces.source.path)/node_modules)"
           - name: cache-upload
             ref:
-#              name: cache-upload
-              resolver: http
+              resolver: cluster
               params:
-                - name: url
-                  value: https://raw.githubusercontent.com/openshift-pipelines/tekton-caches/main/tekton/cache-upload.yaml
+                - name: kind
+                  value: stepaction
+                - name: name
+                  value: cache-upload
+                - name: namespace
+                  value: openshift-pipelines
             params:
-              - name: patterns
+              - name: PATTERNS
                 value: $(params.cachePatterns)
-              - name: target
-                value: "oci://$(params.registry)/cache-nodejs:{{hash}}"
-              - name: cachePath
+              - name: TARGET
+                value: "oci://$(params.registry)/cache-nodejs2:{{hash}}"
+              - name: CACHE_PATH
                 value: $(workspaces.source.path)/node_modules
-              - name: workingdir
+              - name: WORKING_DIR
                 value: $(workspaces.source.path)/
-              - name: force-cache-upload
+              - name: FORCE_CACHE_UPLOAD
                 value: $(params.force-cache-upload)

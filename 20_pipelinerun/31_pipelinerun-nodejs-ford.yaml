@@ -1,0 +1,22 @@
+---
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: pbindal-pipeline-tekton-caches-nodejs-ford-
+spec:
+  pipelineRef:
+    name: pipeline-nodejs
+  params:
+    - name: repo_url
+      value: https://github.com/techademy-pb/sample-nodejs-project.git
+    - name: revision
+      value: main
+    - name: registry
+      value: docker.io/pramodbindal/$(context.pipelineRun.namespace)
+    - name: cachePatterns
+      value: [ "**/workspace/source/package.json"]
+#    - name: image
+#      value: registry.ford.com/pipelines/universal-builder:1.5.3-202411071753@sha256:d9b12a0517c7e89e09d90922ec6ff0fad3bc0316942957e42521411e52458a52
+  workspaces:
+    - name: source
+      emptyDir: {}
